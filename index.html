@@ -409,7 +409,7 @@
             matSelect.appendChild(opt);
         });
 
-        qtyUnitText.textContent = isOffset ? 'ชิ้น' : 'เมตร';
+        qtyUnitText.textContent = isOffset ? 'ชิ้น' : 'ชิ้น / เมตร';
         calculate();
     }
 
@@ -574,7 +574,7 @@
         document.getElementById('printSystemText').textContent = isOffset ? 'Offset (พิมพ์แผ่น)' : 'Gravure (พิมพ์ม้วน)';
         document.getElementById('printMaterialText').textContent = matSelectElem.options[matSelectElem.selectedIndex] ? matSelectElem.options[matSelectElem.selectedIndex].text : '-';
         document.getElementById('printSizeText').textContent = `${w} x ${l} ซม.`;
-        document.getElementById('printQtyText').textContent = `${parseInt(qty).toLocaleString()} ${isOffset ? 'ชิ้น' : 'เมตร'}`;
+        document.getElementById('printQtyText').textContent = `${parseInt(qty).toLocaleString()} ${isOffset ? 'ชิ้น' : 'ชิ้น / เมตร'}`;
         document.getElementById('printColorText').textContent = `${colors} สี`;
 
         window.pdfTotalFormatted = `${Math.ceil(pdfTotalPrice).toLocaleString()} ฿`;
@@ -602,7 +602,7 @@
 
         const text = `📌 **สรุปราคาประเมินเบื้องต้น (${systemName})**
 👤 **ลูกค้า/งาน:** ${client}
-${contactStr}📏 **ขนาด:** ${w} x ${l} ซม. | **จำนวน:** ${parseInt(qty).toLocaleString()} ${isOffset ? 'ชิ้น' : 'เมตร'} | **พิมพ์:** ${colors} สี
+${contactStr}📏 **ขนาด:** ${w} x ${l} ซม. | **จำนวน:** ${parseInt(qty).toLocaleString()} ${isOffset ? 'ชิ้น' : 'ชิ้น / เมตร'} | **พิมพ์:** ${colors} สี
 ---
 💰 **ยอดรวมประมาณการ:** ${totalPrice} (ราคาก่อน VAT)
 🏷️ **เฉลี่ยชิ้นละ:** ${pricePerUnit} บาท
