@@ -148,7 +148,7 @@
             
             .print-header { display: block !important; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 10px; }
             .print-header h2 { font-size: 1.4rem; font-weight: bold; margin-bottom: 4px; }
-            .print-header p { font-size: 0.85rem; color: #333; }
+            .print-header p { font-size: 0.85rem; color: #333; margin-bottom: 4px; }
 
             .print-spec-table { display: block !important; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; padding: 12px; font-size: 0.9rem; background: #fafafa !important; }
             .print-spec-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #ddd; }
@@ -194,11 +194,19 @@
             </div>
 
             <div class="card">
-                <div class="card-title">2. สเปกชิ้นงาน & ปริมาณ</div>
+                <div class="card-title">2. สเปกชิ้นงาน & ข้อมูลลูกค้า</div>
                 <div class="form-grid">
                     <div class="form-group full">
                         <label for="clientName">ชื่อลูกค้า / ชื่องาน</label>
                         <input type="text" id="clientName" placeholder="ระบุชื่อลูกค้าหรือโปรเจกต์..." oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPerson">ชื่อผู้ติดต่อ</label>
+                        <input type="text" id="contactPerson" placeholder="ระบุชื่อผู้ติดต่อ..." oninput="calculate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPhone">เบอร์โทรศัพท์</label>
+                        <input type="text" id="contactPhone" placeholder="ระบุเบอร์โทร..." oninput="calculate()">
                     </div>
                     <div class="form-group">
                         <label for="quantity">จำนวนสั่งผลิต (<span id="qtyUnitText">ชิ้น</span>)</label>
@@ -242,6 +250,7 @@
                 <div class="print-header">
                     <h2>ใบประเมินราคาเบื้องต้น (Quotation Estimation)</h2>
                     <p>วันที่พิมพ์: <span id="printDate"></span> | ลูกค้า/งาน: <span id="printClient" style="font-weight:600;">ทั่วไป</span></p>
+                    <p>ผู้ติดต่อ: <span id="printContact">-</span> | เบอร์โทร: <span id="printPhone">-</span></p>
                 </div>
 
                 <!-- ตารางสรุปสเปกสำหรับโหมดพิมพ์ PDF -->
@@ -351,7 +360,7 @@
                 </div>
 
                 <div class="disclaimer">
-                    ⚠️ <strong>หมายเหตุ:</strong> ราคานี้เป็นราคาประเมินเบื้องต้น ยอดในใบเสนอราคาจริงจะปรับลดลงตามรายละเอียดเทคนิคการผลิต
+                    ⚠️ <strong>หมายเหตุ:</strong> ราคานี้เป็นราคาประเมินเบื้องต้น (ราคาก่อน VAT 7%) ยอดในใบเสนอราคาจริงอาจมีการปรับลดลงตามรายละเอียดเทคนิคการผลิต
                 </div>
 
                 <!-- ปุ่มแอคชั่น -->
@@ -552,7 +561,13 @@
         document.getElementById('resSystemText').textContent = isOffset ? 'Offset' : 'Gravure';
 
         const clientNameVal = document.getElementById('clientName').value || 'ลูกค้าทั่วไป';
+        const contactPersonVal = document.getElementById('contactPerson').value || '-';
+        const contactPhoneVal = document.getElementById('contactPhone').value || '-';
+
         document.getElementById('printClient').textContent = clientNameVal;
+        document.getElementById('printContact').textContent = contactPersonVal;
+        document.getElementById('printPhone').textContent = contactPhoneVal;
+
         const now = new Date();
         document.getElementById('printDate').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -568,6 +583,8 @@
 
     function copySummaryToClipboard() {
         const client = document.getElementById('clientName').value || 'ลูกค้าทั่วไป';
+        const contact = document.getElementById('contactPerson').value;
+        const phone = document.getElementById('contactPhone').value;
         const isOffset = document.getElementById('sysOffset').checked;
         const systemName = isOffset ? 'Offset' : 'Gravure';
         const qty = document.getElementById('quantity').value;
@@ -578,11 +595,16 @@
         const totalPrice = document.getElementById('resCustomTotalPrice').textContent;
         const pricePerUnit = document.getElementById('resCustomPerUnit').textContent;
 
+        let contactStr = '';
+        if (contact || phone) {
+            contactStr = `📞 **ผู้ติดต่อ:** ${contact || '-'} ${phone ? `(${phone})` : ''}\n`;
+        }
+
         const text = `📌 **สรุปราคาประเมินเบื้องต้น (${systemName})**
 👤 **ลูกค้า/งาน:** ${client}
-📏 **ขนาด:** ${w} x ${l} ซม. | **จำนวน:** ${parseInt(qty).toLocaleString()} ${isOffset ? 'ชิ้น' : 'เมตร'} | **พิมพ์:** ${colors} สี
+${contactStr}📏 **ขนาด:** ${w} x ${l} ซม. | **จำนวน:** ${parseInt(qty).toLocaleString()} ${isOffset ? 'ชิ้น' : 'เมตร'} | **พิมพ์:** ${colors} สี
 ---
-💰 **ยอดรวมประมาณการ:** ${totalPrice} (ไม่รวม VAT)
+💰 **ยอดรวมประมาณการ:** ${totalPrice} (ราคาก่อน VAT)
 🏷️ **เฉลี่ยชิ้นละ:** ${pricePerUnit} บาท
 *(หมายเหตุ: ราคานี้เป็นราคาประเมินเบื้องต้นหน้างาน ยอดในใบเสนอราคาจริงอาจมีการปรับลดลงตามรายละเอียดเทคนิคการผลิต)*`;
 
