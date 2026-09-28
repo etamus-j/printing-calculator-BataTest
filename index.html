@@ -104,6 +104,11 @@
         details.cost-accordion summary::after { content: "＋"; font-size: 0.9rem; }
         details[open].cost-accordion summary::after { content: "－"; }
 
+        .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed var(--border-light); }
+        .cost-row:last-child { border-bottom: none; }
+        .cost-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-dark); font-size: 0.82rem; font-weight: 400; }
+        .cost-row input[type="checkbox"] { cursor: pointer; width: 14px; height: 14px; }
+
         .price-hero { background: var(--accent-green-bg); border: 1px solid var(--accent-green); border-radius: var(--radius-md); padding: 18px; text-align: center; margin-bottom: 12px; }
         .price-hero .title { font-size: 0.78rem; font-weight: 600; color: var(--accent-green); letter-spacing: 0.03em; text-transform: uppercase; }
         .price-hero .amount { font-size: 2.1rem; font-weight: 700; color: var(--accent-green); margin: 2px 0; letter-spacing: -0.02em; }
@@ -144,7 +149,6 @@
             .result-side { width: 100% !important; }
             .card.result-card { border: none !important; box-shadow: none !important; position: static !important; padding: 0 !important; }
             
-            /* แสดงหัวกระดาษและตารางสรุปสเปกทางการ */
             .print-header { display: block !important; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 10px; }
             .print-header h2 { font-size: 1.4rem; font-weight: bold; margin-bottom: 4px; }
             .print-header p { font-size: 0.85rem; color: #333; }
@@ -153,7 +157,6 @@
             .print-spec-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #ddd; }
             .print-spec-row:last-child { border-bottom: none; }
 
-            /* ปรับกล่องราคาให้ดูเรียบร้อยทางการ */
             .price-hero { background: #f3f4f6 !important; border: 1px solid #000 !important; color: #000 !important; padding: 24px !important; margin-top: 10px; }
             .price-hero .title { color: #555 !important; font-size: 0.85rem !important; }
             .price-hero .amount { color: #000 !important; font-size: 2.5rem !important; }
@@ -271,35 +274,35 @@
 
                 <div class="card-title">สรุปประเมินราคา</div>
 
-                <!-- 1. รายการต้นทุนย่อย (Accordion ซ่อน/เปิดได้) -->
-                <details class="cost-accordion">
+                <!-- 1. รายการต้นทุนย่อย (Accordion + Checkbox เลือกคำนวณราคา) -->
+                <details class="cost-accordion" open>
                     <summary>
-                        <span>โครงสร้างต้นทุนเบื้องต้น</span>
+                        <span>โครงสร้างต้นทุน (เลือกรายการคิดราคา)</span>
                         <strong id="resRawTotalCostSummary" style="color:var(--text-dark);">0 ฿</strong>
                     </summary>
-                    <div class="summary-list" style="margin-top:8px; margin-bottom:0;">
-                        <div class="summary-item">
-                            <span>วัสดุ/กระดาษ:</span>
+                    <div style="margin-top:10px; display: flex; flex-direction: column; gap: 6px;">
+                        <div class="cost-row">
+                            <label><input type="checkbox" id="incMat" checked onchange="calculate()"> วัสดุ/กระดาษ</label>
                             <strong id="resCostMat">0 บาท</strong>
                         </div>
-                        <div class="summary-item">
-                            <span>หมึกพิมพ์:</span>
+                        <div class="cost-row">
+                            <label><input type="checkbox" id="incInk" checked onchange="calculate()"> หมึกพิมพ์</label>
                             <strong id="resCostInk">0 บาท</strong>
                         </div>
-                        <div class="summary-item">
-                            <span>ค่าแรง + ไฟเดินเครื่อง:</span>
+                        <div class="cost-row">
+                            <label><input type="checkbox" id="incLabor" checked onchange="calculate()"> ค่าแรง + ไฟ</label>
                             <strong id="resCostLabor">0 บาท</strong>
                         </div>
-                        <div class="summary-item">
-                            <span>เพลท / แม่พิมพ์:</span>
+                        <div class="cost-row">
+                            <label><input type="checkbox" id="incMold" checked onchange="calculate()"> เพลท / แม่พิมพ์</label>
                             <strong id="resMoldCost">0 บาท</strong>
                         </div>
-                        <div class="summary-item">
-                            <span>งานหลังพิมพ์:</span>
+                        <div class="cost-row">
+                            <label><input type="checkbox" id="incFinish" checked onchange="calculate()"> งานหลังพิมพ์</label>
                             <strong id="resFinishCost">0 บาท</strong>
                         </div>
-                        <div class="summary-item" style="border-top:1px solid var(--border-light); margin-top:4px; padding-top:4px;">
-                            <span><strong>รวมต้นทุนจริง:</strong></span>
+                        <div class="summary-item" style="border-top:1px solid var(--border-light); margin-top:4px; padding-top:6px;">
+                            <span><strong>รวมต้นทุนเลือกคิด:</strong></span>
                             <strong id="resRawTotalCost" style="color:var(--accent-amber);">0 ฿</strong>
                         </div>
                     </div>
@@ -494,7 +497,13 @@
             finishCost += foldLabor;
         }
 
-        const rawTotalCost = moldCost + laborAndPowerCost + matCost + inkCost + finishCost;
+        // คำนวณต้นทุนรวมแบบเลือกเฉพาะที่ติ๊ก
+        let rawTotalCost = 0;
+        if (document.getElementById('incMat').checked) rawTotalCost += matCost;
+        if (document.getElementById('incInk').checked) rawTotalCost += inkCost;
+        if (document.getElementById('incLabor').checked) rawTotalCost += laborAndPowerCost;
+        if (document.getElementById('incMold').checked) rawTotalCost += moldCost;
+        if (document.getElementById('incFinish').checked) rawTotalCost += finishCost;
         
         const customTotalPrice = rawTotalCost * (1 + (marginPercent / 100));
         const customPerUnit = qty > 0 ? (customTotalPrice / qty) : 0;
@@ -505,11 +514,11 @@
         const price10 = rawTotalCost * 1.10;
         const price20 = rawTotalCost * 1.20;
 
-        document.getElementById('resCostMat').textContent = `${Math.ceil(matCost).toLocaleString()} บาท (${totalMetersUsed.toLocaleString(undefined, {maximumFractionDigits: 1})} ม.)`;
-        document.getElementById('resCostInk').textContent = `${Math.ceil(inkCost).toLocaleString()} บาท`;
-        document.getElementById('resCostLabor').textContent = `${Math.ceil(laborAndPowerCost).toLocaleString()} บาท`;
-        document.getElementById('resMoldCost').textContent = `${moldCost.toLocaleString()} บาท`;
-        document.getElementById('resFinishCost').textContent = `${Math.ceil(finishCost).toLocaleString()} บาท`;
+        document.getElementById('resCostMat').textContent = `${Math.ceil(matCost).toLocaleString()} บ.`;
+        document.getElementById('resCostInk').textContent = `${Math.ceil(inkCost).toLocaleString()} บ.`;
+        document.getElementById('resCostLabor').textContent = `${Math.ceil(laborAndPowerCost).toLocaleString()} บ.`;
+        document.getElementById('resMoldCost').textContent = `${moldCost.toLocaleString()} บ.`;
+        document.getElementById('resFinishCost').textContent = `${Math.ceil(finishCost).toLocaleString()} บ.`;
 
         document.getElementById('resRawTotalCost').textContent = `${Math.ceil(rawTotalCost).toLocaleString()} ฿`;
         document.getElementById('resRawTotalCostSummary').textContent = `${Math.ceil(rawTotalCost).toLocaleString()} ฿`;
